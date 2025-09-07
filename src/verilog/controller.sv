@@ -41,7 +41,7 @@ module controller import calculator_pkg::*;(
 
 	//State reg, other registers as needed
 	always_ff @(posedge clk_i) begin
-		if (rst_i)
+		if (rst_i) begin
 			state <= S_IDLE;
 			rd_ptr          <= '0;
             wr_ptr          <= '0;
@@ -52,7 +52,8 @@ module controller import calculator_pkg::*;(
 
             result_buf      <= '0;
             buffer_control  <= 1'b0; // start filling lower half first
-		else
+		end
+		else begin
 			state <= next;
 			// Address pointers and datapath actions by state
             case (state)
@@ -119,6 +120,7 @@ module controller import calculator_pkg::*;(
                     // no sequential updates
                 end
             endcase
+		end
 	end
 	
 	//Next state logic, outputs
