@@ -22,6 +22,10 @@ module result_buffer import calculator_pkg::*; (
             internal_buffer <= '0;
         end else begin
             //Place result_i into buffer based on loc_sel
+            case (loc_sel)
+                1'b0: internal_buffer[31:0] <= result_i;
+                1'b1: internal_buffer[63:32] <= result_i;
+            endcase
         end
     end
 
