@@ -39,6 +39,8 @@ module controller import calculator_pkg::*;(
 	logic              have_a;            // 0 = next READ fills a_reg, 1 = next READ fills b_reg
 	logic [MEM_WORD_SIZE-1:0] result_buf; // [31:0] lower, [63:32] upper
 
+	logic done_writes;
+
 	//State reg, other registers as needed
 	always_ff @(posedge clk_i) begin
 		if (rst_i) begin
