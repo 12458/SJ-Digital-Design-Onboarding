@@ -15,9 +15,39 @@ module top_lvl import calculator_pkg::*; (
 );
 
     //Any wires, combinational assigns, etc should go at the top for visibility
+    
+    // Internal signals
+    logic                     write;
+    logic [ADDR_W-1:0]        w_addr;
+    logic [MEM_WORD_SIZE-1:0] w_data;
+    logic                     read;
+    logic [ADDR_W-1:0]        r_addr;
+    logic [MEM_WORD_SIZE-1:0] r_data;
+    logic                     buffer_control;
+    logic [DATA_W-1:0]        op_a;
+    logic [DATA_W-1:0]        op_b;
+    logic [MEM_WORD_SIZE-1:0] buff_result;
+    logic [DATA_W-1:0]        adder_sum;
    
     //TODO: Finish instantiation of your controller module
-	controller u_ctrl ();
+	controller u_ctrl (
+        .clk_i(clk),
+        .rst_i(rst),
+        .read_start_addr(read_start_addr),
+        .read_end_addr(read_end_addr),
+        .write_start_addr(write_start_addr),
+        .write_end_addr(write_end_addr),
+        .write(write),
+        .w_addr(w_addr),
+        .w_data(w_data),
+        .read(read),
+        .r_addr(r_addr),
+        .r_data(r_data),
+        .buffer_control(buffer_control),
+        .op_a(op_a),
+        .op_b(op_b),
+        .buff_result(buff_result)
+    );
 
     //TODO: Look at the sky130_sram_2kbyte_1rw1r_32x512_8 module and instantiate it using variables defined above.
     // Note: This module has two ports, port 0 for read and write and port 1 for read only. We are using port 0 writing and port 1 for reading in this design.    
@@ -38,31 +68,49 @@ module top_lvl import calculator_pkg::*; (
      */
   	
       sky130_sram_2kbyte_1rw1r_32x512_8 sram_A (
-        .clk0   (),  
-        .csb0   (),
-        .web0   (), 
-        .wmask0 (), 
-        .addr0  (), 
-        .din0   (),
+        .clk0   (clk),  
+        .csb0   (~write),
+        .web0   (~write), 
+        .wmask0 (4'hF), 
+        .addr0  (w_addr), 
+        .din0   (w_data[31:0]),
         .dout0  (), 
-        .clk1   (), 
-        .csb1   (), 
-        .addr1  (), 
-        .dout1  () 
+        .clk1   (clk), 
+        .csb1   (~read), 
+        .addr1  (r_addr), 
+        .dout1  (r_data[31:0]) 
     );
 
   
     //TODO: Instantiate the second SRAM for the upper half of the memory.
-    sky130_sram_2kbyte_1rw1r_32x512_8 sram_B ();
+    sky130_sram_2kbyte_1rw1r_32x512_8 sram_B (
+        .clk0   (clk),  
+        .csb0   (~write),
+        .web0   (~write), 
+        .wmask0 (4'hF), 
+        .addr0  (w_addr), 
+        .din0   (w_data[63:32]),
+        .dout0  (), 
+        .clk1   (clk), 
+        .csb1   (~read), 
+        .addr1  (r_addr), 
+        .dout1  (r_data[63:32]) 
+    );
   	
   	//TODO: Finish instantiation of your adder module
     adder32 u_adder (
-
+        .a_i(op_a),
+        .b_i(op_b),
+        .sum_o(adder_sum)
     );
  
     //TODO: Finish instantiation of your result buffer
     result_buffer u_resbuf (
-      
+        .clk_i(clk),
+        .rst_i(rst),
+        .result_i(adder_sum),
+        .loc_sel(buffer_control),
+        .buffer_o(buff_result)
     );
 
 endmodule
